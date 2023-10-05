@@ -1,23 +1,48 @@
 import { useState } from "react";
 import clickSound from "./ClickSound.m4a";
 import { memo } from "react";
+import { useCallback } from "react";
+import { useEffect } from "react";
 
 function Calculator({ workouts, allowSound }) {
   const [number, setNumber] = useState(workouts.at(0).numExercises);
   const [sets, setSets] = useState(3);
   const [speed, setSpeed] = useState(90);
   const [durationBreak, setDurationBreak] = useState(5);
+  const [duration, setDuration] = useState(0);
 
-  const duration =
-    (number * sets * speed) / 60 + (sets - 1) * durationBreak;
+  // const duration =
+  //   (number * sets * speed) / 60 + (sets - 1) * durationBreak;
   const mins = Math.floor(duration);
   const seconds = (duration - mins) * 60;
 
-  const playSound = function () {
-    if (!allowSound) return;
+  // Responsible for setting the duration
+  useEffect(() => {
+    setDuration(
+      (number * sets * speed) / 60 + (sets - 1) * durationBreak,
+    );
+  }, [durationBreak, number, sets, speed]);
+
+  // Responsible for playing the sound
+  // * We use duration variable inside dependency array `voluntarily`
+  useEffect(() => {
+    if (!allowSound) {
+      return;
+    }
+
     const sound = new Audio(clickSound);
     sound.play();
-  };
+  }, [duration, allowSound]);
+
+  function handleInc() {
+    setDuration((duration) => Math.floor(duration) + 1);
+  }
+
+  function handleDec() {
+    setDuration((duration) =>
+      duration > 1 ? Math.ceil(duration) - 1 : 0,
+    );
+  }
 
   return (
     <>
@@ -71,13 +96,13 @@ function Calculator({ workouts, allowSound }) {
         </div>
       </form>
       <section>
-        <button onClick={() => {}}>–</button>
+        <button onClick={handleDec}>–</button>
         <p>
           {mins < 10 && "0"}
           {mins}:{seconds < 10 && "0"}
           {seconds}
         </p>
-        <button onClick={() => {}}>+</button>
+        <button onClick={handleInc}>+</button>
       </section>
     </>
   );
